@@ -1,0 +1,14 @@
+[Unit]
+Description=Vintum: crea vmbr1/NAT/rutas ANTES de arrancar invitados y HA
+Documentation=file:///usr/local/sbin/vintum-ha-net.sh
+After=network.target local-fs.target
+Before=pve-guests.service pve-ha-lrm.service pve-ha-crm.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/vintum-ha-net.sh
+TimeoutStartSec=90
+
+[Install]
+WantedBy=multi-user.target

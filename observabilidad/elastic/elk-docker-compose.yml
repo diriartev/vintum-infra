@@ -1,0 +1,87 @@
+# Elastic Stack — centralización de logs (Bloque 2, Eje 1)
+# elastic-01 (VM 111, pve-01, 10.20.0.40; migrada desde pve-02 por capacidad HA). Nodo único: réplicas = 0 → clúster verde.
+# 9200/5601 publicados solo en la IP LAN y filtrados en DOCKER-USER (ver /etc/ufw/after.rules).
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.4
+    container_name: es01
+    restart: unless-stopped
+    environment:
+      - node.name=es01
+      - cluster.name=vintum-logs
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true                 # la JVM nunca va a swap
+      - ES_JAVA_OPTS=-Xms1280m -Xmx1280m           # heap fija: ≤50 % de la RAM de la VM
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.license.self_generated.type=basic
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true       # TLS en 9200 (Filebeat, Kibana)
+      - xpack.security.http.ssl.key=certs/es01/es01.key
+      - xpack.security.http.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=certs/es01/es01.key
+      - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+      - xpack.security.transport.ssl.verification_mode=certificate
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+      nofile: { soft: 65536, hard: 65536 }
+    volumes:
+      - ./certs:/usr/share/elasticsearch/config/certs:ro
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "10.20.0.40:9200:9200"
+    mem_limit: 2100m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w %{http_code} --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 401"]   # responde y exige credenciales
+      interval: 15s
+      timeout: 10s
+      retries: 40
+    networks: [elk_net]
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.5.4
+    container_name: kibana
+    restart: unless-stopped
+    depends_on:
+      es01: { condition: service_healthy }
+    environment:
+      - SERVERNAME=kibana
+      - SERVER_PUBLICBASEURL=https://kibana.vintum.example
+      - ELASTICSEARCH_HOSTS=https://es01:9200
+      - ELASTICSEARCH_USERNAME=kibana_system          # cuenta de servicio, no el superusuario
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENC_KEY}
+      - XPACK_SECURITY_ENCRYPTIONKEY=${KIBANA_SEC_KEY}
+      - XPACK_REPORTING_ENCRYPTIONKEY=${KIBANA_REP_KEY}
+      - NODE_OPTIONS=--max-old-space-size=1100
+    volumes:
+      - ./certs:/usr/share/kibana/config/certs:ro
+      - kibanadata:/usr/share/kibana/data
+    ports:
+      - "10.20.0.40:5601:5601"
+    mem_limit: 1500m
+    security_opt: [no-new-privileges:true]
+    networks: [elk_net]
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.1
+    container_name: elk_cloudflared
+    restart: unless-stopped
+    profiles: ["tunnel"]                          # se activa cuando exista el token del túnel "logs"
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 128m
+    networks: [elk_net]
+
+networks:
+  elk_net: {}
+
+volumes:
+  esdata:
+  kibanadata:

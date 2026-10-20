@@ -1,0 +1,17 @@
+# Proxmox (Debian 13): sin rsyslog, todo en journald.
+# El journal del hipervisor pesa >1 GB; sin límite, el primer arranque envía TODO el
+# histórico por el mesh y lo satura (bitácora B2-13). Se empieza por las últimas 24 h
+# y después se continúa desde el cursor guardado (Filebeat 9 ya no acepta seek: cursor).
+- module: system
+  syslog:
+    enabled: true
+    var.use_journald: true
+    input:
+      seek: since        # Filebeat 9: si hay cursor guardado siempre continúa desde él;
+      since: -24h        # 'since' solo define el punto de partida del primer arranque
+  auth:
+    enabled: true
+    var.use_journald: true
+    input:
+      seek: since        # Filebeat 9: si hay cursor guardado siempre continúa desde él;
+      since: -24h        # 'since' solo define el punto de partida del primer arranque

@@ -1,0 +1,14 @@
+# --- Bloque 2: filtro de puertos publicados por Docker (Docker se salta las reglas INPUT de ufw) ---
+*filter
+:DOCKER-USER - [0:0]
+-A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
+# Portainer Agent 9001: solo el servidor Portainer (web1)
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 9001 -s 10.20.0.50 -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 9001 -j DROP
+# Homarr 7575 y GLPI 8080: solo LAN de ambos sitios (Internet entra por el tunel, no por aqui)
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 7575 -s 10.20.0.0/23 -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 8080 -s 10.20.0.0/23 -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 7575 -j DROP
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 8080 -j DROP
+-A DOCKER-USER -j RETURN
+COMMIT

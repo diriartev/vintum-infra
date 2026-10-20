@@ -1,0 +1,41 @@
+{
+ "attributes": {
+  "title": "Ataques reales filtrados por Cloudflare (borde)",
+  "description": "Eventos del WAF, reglas administradas y Bot Fight Mode obtenidos por la API de Cloudflare (Bloque 2)",
+  "columns": [
+   "event.action",
+   "source.ip",
+   "source.geo.country_iso_code",
+   "source.as.organization.name",
+   "http.request.method",
+   "url.domain",
+   "url.path",
+   "rule.ruleset",
+   "user_agent.original"
+  ],
+  "sort": [
+   [
+    "@timestamp",
+    "desc"
+   ]
+  ],
+  "grid": {},
+  "hideChart": false,
+  "isTextBasedQuery": false,
+  "timeRestore": true,
+  "timeRange": {
+   "from": "now-3d",
+   "to": "now"
+  },
+  "kibanaSavedObjectMeta": {
+   "searchSourceJSON": "{\"query\": {\"query\": \"event.dataset:cloudflare.security\", \"language\": \"kuery\"}, \"filter\": [], \"indexRefName\": \"kibanaSavedObjectMeta.searchSourceJSON.index\"}"
+  }
+ },
+ "references": [
+  {
+   "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+   "type": "index-pattern",
+   "id": "vintum-logs"
+  }
+ ]
+}

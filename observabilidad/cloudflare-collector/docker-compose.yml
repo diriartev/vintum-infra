@@ -1,0 +1,18 @@
+# Recolector de logs/métricas de Cloudflare (API, token de SOLO LECTURA) -> /data/*.ndjson -> Filebeat (svc-01)
+services:
+  collector:
+    image: python:3.12-alpine
+    container_name: cf_collector
+    restart: unless-stopped
+    user: "1000:1000"
+    env_file: .env                      # CF_API_TOKEN, CF_ACCOUNT_ID, CF_ZONE_ID (chmod 600)
+    environment: [PYTHONUNBUFFERED=1, BACKFILL_HOURS=70]
+    command: ["python", "/app/collector.py"]
+    volumes:
+      - ./collector.py:/app/collector.py:ro
+      - ./data:/data
+      - ./state:/state
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 128m

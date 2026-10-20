@@ -1,0 +1,12 @@
+# Nunca se publica: secretos, tokens y datos de la instalación
+.env
+*.env
+*.pem
+*.key
+*.crt
+id_*
+secrets/
+__pycache__/
+*.pyc
+node_modules/
+.wrangler/

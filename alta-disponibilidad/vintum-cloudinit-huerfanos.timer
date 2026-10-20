@@ -1,0 +1,7 @@
+[Unit]
+Description=Vintum - limpieza de cloudinit huerfanos cada 5 min
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+[Install]
+WantedBy=timers.target

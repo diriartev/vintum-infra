@@ -1,0 +1,30 @@
+#!/bin/bash
+# Watchdog del conector WARP (bitacora B2-16): si warp-svc queda colgado (warp-cli no
+# responde en 20 s) o desconectado, se reinicia. Un cuelgue en pve-02 por E/S dejo el
+# mesh sitio1->sitio2 caido ~40 min el 23-sep-2026.
+if ! out=$(timeout 20 warp-cli status 2>&1) || ! grep -q "Connected" <<<"$out"; then
+    logger -t warp-watchdog "warp-svc no responde o no conectado: reinicio. Estado: $(tr "\n" " " <<<"$out" | cut -c1-150)"
+    systemctl restart warp-svc
+    sleep 15
+    systemctl start warp-mesh-routes.service
+fi
+
+# /etc/systemd/system/warp-watchdog.timer
+[Unit]
+Description=Comprueba el conector WARP cada 2 minutos
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=2min
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target
+
+# /etc/sysctl.d/90-swappiness.conf
+# Hipervisor: preferir liberar cache antes que enviar memoria de VMs a swap (bitacora B2-16)
+vm.swappiness=10
+# /etc/systemd/journald.conf.d/90-limite.conf
+# warp-svc escribe ~10k lineas/h: acotar el journal para reducir E/S y disco (bitacora B2-16)
+[Journal]
+SystemMaxUse=500M

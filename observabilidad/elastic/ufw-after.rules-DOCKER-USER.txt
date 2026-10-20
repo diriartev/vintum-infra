@@ -1,0 +1,17 @@
+# --- Bloque 2: filtro de puertos publicados por Docker (Docker se salta las reglas INPUT de ufw) ---
+*filter
+:DOCKER-USER - [0:0]
+-A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
+# Portainer Agent 9001: solo el servidor Portainer (web1)
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 9001 -s 10.20.0.50 -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 9001 -j DROP
+# Elasticsearch 9200 y Kibana 5601: solo LAN de ambos sitios y tunel WARP (IPs 100.96.0.0/12 de los hipervisores)
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 9200 -s 10.20.0.0/24 -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 9200 -s 10.20.1.0/24 -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 9200 -s 100.96.0.0/12 -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 5601 -s 10.20.0.0/24 -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 5601 -s 10.20.1.0/24 -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 9200 -j DROP
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport 5601 -j DROP
+-A DOCKER-USER -j RETURN
+COMMIT

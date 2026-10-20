@@ -1,0 +1,19 @@
+# Heartbeat — sondas de disponibilidad (Bloque 2). API key de solo escritura en .env (600).
+services:
+  heartbeat:
+    image: docker.elastic.co/beats/heartbeat:9.5.4
+    container_name: heartbeat
+    restart: unless-stopped
+    env_file: .env
+    command: ["heartbeat", "-e", "--strict.perms=false"]
+    volumes:
+      - ./heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
+      - ./elastic-ca.crt:/usr/share/heartbeat/elastic-ca.crt:ro
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cap_add: [NET_RAW]          # el binario trae la file capability cap_net_raw (sin ella: exit 126, B2-11)
+    mem_limit: 200m
+    networks: [svc_edge]
+networks:
+  svc_edge:
+    external: true

@@ -1,0 +1,37 @@
+# GLPI — mesa de ayuda / ITSM (Bloque 2, Eje 2)
+# BD en db1 (10.20.0.60) por mTLS: usuario glpi@10.20.0.70 REQUIRE X509,
+# certificado de cliente CN=glpi-svc01 firmado por la CA de db1.
+# Publicado: LAN 10.20.0.70:8080 y glpi.vintum.example (cloudflared de svc-01, red svc_edge) + Access.
+services:
+  glpi:
+    image: glpi/glpi:11.0.9
+    container_name: glpi
+    restart: unless-stopped
+    environment:
+      - TZ=America/Bogota
+      - GLPI_DB_HOST=10.20.0.60
+      - GLPI_DB_PORT=3306
+      - GLPI_DB_NAME=glpi
+      - GLPI_DB_USER=glpi
+      - GLPI_DB_PASSWORD=${GLPI_DB_PASSWORD}        # desde .env (chmod 600)
+      - GLPI_DB_SSL=true
+      - GLPI_DB_SSL_CA=/etc/glpi-db-certs/ca-cert.pem
+      - GLPI_DB_SSL_CERT=/etc/glpi-db-certs/glpi-client-cert.pem
+      - GLPI_DB_SSL_KEY=/etc/glpi-db-certs/glpi-client-key.pem
+    volumes:
+      - glpi_data:/var/glpi                          # config, files, marketplace
+      - ./certs:/etc/glpi-db-certs:ro
+    ports:
+      - "10.20.0.70:8080:80"                      # solo LAN; Docker se salta ufw
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]                   # apache2 de la imagen trae esta file capability (sin ella: exit 126)
+    mem_limit: 768m
+    networks: [svc_edge]
+
+networks:
+  svc_edge:
+    external: true                                   # compartida con el cloudflared de svc-01
+
+volumes:
+  glpi_data:

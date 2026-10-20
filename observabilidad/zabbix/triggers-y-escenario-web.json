@@ -1,0 +1,34 @@
+{
+ "triggers": [
+  {
+   "triggerid": "33289",
+   "description": "Vintum: web publica caida (web.vintum.example)",
+   "expression": "last(/WEBSERVER_PVE1/web.test.fail[Vintum publico (web.vintum.example)])>0 and last(/WEBSERVER_PVE1/web.test.fail[Vintum publico (web.vintum.example)],#2)>0",
+   "priority": "4",
+   "comments": "Dos comprobaciones consecutivas fallidas del escenario web (camino real: Internet -> Cloudflare -> tunel -> nginx). Bloque 1/2: caida del servicio web."
+  },
+  {
+   "triggerid": "33320",
+   "description": "DEMO: incidente simulado de seguridad (Bloque 2)",
+   "expression": "last(/ZABBIX_PVE1/vintum.demo.incidente)=1",
+   "priority": "4",
+   "comments": "Trigger de demostración: valida detección (Zabbix) -> ticket (GLPI) -> evidencia (Kibana)."
+  }
+ ],
+ "escenario_web": [
+  {
+   "httptestid": "1",
+   "name": "Vintum publico (web.vintum.example)",
+   "delay": "1m",
+   "retries": "2",
+   "steps": [
+    {
+     "name": "Portada",
+     "url": "https://web.vintum.example/",
+     "status_codes": "200",
+     "timeout": "15s"
+    }
+   ]
+  }
+ ]
+}

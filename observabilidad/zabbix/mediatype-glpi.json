@@ -1,0 +1,127 @@
+{
+ "name": "GLPI",
+ "status": "0",
+ "description": "Vintum Bloque 2: API legacy de GLPI 11 (apirest.php) con user_token del usuario tecnico 'zabbix'; cliente API restringido a 10.20.0.30.",
+ "parameters": [
+  {
+   "name": "alert_message",
+   "value": "{ALERT.MESSAGE}"
+  },
+  {
+   "name": "alert_subject",
+   "value": "{ALERT.SUBJECT}"
+  },
+  {
+   "name": "event_id",
+   "value": "{EVENT.ID}"
+  },
+  {
+   "name": "event_nseverity",
+   "value": "{EVENT.NSEVERITY}"
+  },
+  {
+   "name": "event_severity",
+   "value": "{EVENT.SEVERITY}"
+  },
+  {
+   "name": "event_source",
+   "value": "{EVENT.SOURCE}"
+  },
+  {
+   "name": "event_update_nseverity",
+   "value": "{EVENT.UPDATE.NSEVERITY}"
+  },
+  {
+   "name": "event_update_severity",
+   "value": "{EVENT.UPDATE.SEVERITY}"
+  },
+  {
+   "name": "event_update_status",
+   "value": "{EVENT.UPDATE.STATUS}"
+  },
+  {
+   "name": "event_value",
+   "value": "{EVENT.VALUE}"
+  },
+  {
+   "name": "glpi_app_token",
+   "value": ""
+  },
+  {
+   "name": "glpi_client_id",
+   "value": ""
+  },
+  {
+   "name": "glpi_client_secret",
+   "value": ""
+  },
+  {
+   "name": "glpi_legacy_api",
+   "value": "true"
+  },
+  {
+   "name": "glpi_password",
+   "value": ""
+  },
+  {
+   "name": "glpi_problem_id",
+   "value": "{EVENT.TAGS.__zbx_glpi_problem_id}"
+  },
+  {
+   "name": "glpi_urgency_autoregistration",
+   "value": "Low"
+  },
+  {
+   "name": "glpi_urgency_discovery",
+   "value": "Low"
+  },
+  {
+   "name": "glpi_urgency_internal",
+   "value": "Low"
+  },
+  {
+   "name": "glpi_url",
+   "value": "http://10.20.0.70:8080"
+  },
+  {
+   "name": "glpi_username",
+   "value": ""
+  },
+  {
+   "name": "glpi_user_token",
+   "value": "<REDACTADO>"
+  },
+  {
+   "name": "severity_average",
+   "value": "Medium"
+  },
+  {
+   "name": "severity_disaster",
+   "value": "Very high"
+  },
+  {
+   "name": "severity_high",
+   "value": "High"
+  },
+  {
+   "name": "severity_information",
+   "value": "Very low"
+  },
+  {
+   "name": "severity_not_classified",
+   "value": "Very low"
+  },
+  {
+   "name": "severity_warning",
+   "value": "Low"
+  },
+  {
+   "name": "trigger_id",
+   "value": "{TRIGGER.ID}"
+  },
+  {
+   "name": "zabbix_url",
+   "value": "{$ZABBIX.URL}"
+  }
+ ]
+}

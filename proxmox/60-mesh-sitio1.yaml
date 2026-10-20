@@ -1,0 +1,10 @@
+# elastic-01 en sitio 1 (pve-01). Sitio 2 e IPs de tunel WARP por el conector local (pve-01)
+network:
+  version: 2
+  ethernets:
+    eth0:
+      routes:
+        - to: 10.20.1.0/24
+          via: 10.20.0.100
+        - to: 100.96.0.0/12
+          via: 10.20.0.100

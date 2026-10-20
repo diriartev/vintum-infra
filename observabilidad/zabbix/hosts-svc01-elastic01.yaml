@@ -1,0 +1,51 @@
+zabbix_export:
+  version: '7.4'
+  host_groups:
+    - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Applications
+    - uuid: c2b191e4b02148909cad865a7c6ff266
+      name: 'Site 1 - PVE1'
+  hosts:
+    - host: ELASTIC01_PVE1
+      name: ELASTIC01_PVE1
+      description: 'elastic-01 (VM 111): Elasticsearch + Kibana. Usuario ES de solo monitoreo (rol vintum_zabbix_monitor)'
+      templates:
+        - name: 'Elasticsearch Cluster by HTTP'
+        - name: 'Linux by Zabbix agent'
+      groups:
+        - name: Applications
+        - name: 'Site 1 - PVE1'
+      interfaces:
+        - ip: 10.20.0.40
+          interface_ref: if1
+      tags:
+        - tag: bloque
+          value: '2'
+        - tag: proyecto
+          value: vintum
+      macros:
+        - macro: '{$ELASTICSEARCH.PASSWORD}'
+          type: SECRET_TEXT
+        - macro: '{$ELASTICSEARCH.PORT}'
+          value: '9200'
+        - macro: '{$ELASTICSEARCH.SCHEME}'
+          value: https
+        - macro: '{$ELASTICSEARCH.USERNAME}'
+          value: zabbix_monitor
+    - host: SVC01_PVE1
+      name: SVC01_PVE1
+      description: 'svc-01 (VM 110): Homarr, GLPI, Heartbeat, agente Portainer, cloudflared'
+      templates:
+        - name: 'Linux by Zabbix agent'
+      groups:
+        - name: Applications
+        - name: 'Site 1 - PVE1'
+      interfaces:
+        - ip: 10.20.0.70
+          interface_ref: if1
+      tags:
+        - tag: bloque
+          value: '2'
+        - tag: proyecto
+          value: vintum
+

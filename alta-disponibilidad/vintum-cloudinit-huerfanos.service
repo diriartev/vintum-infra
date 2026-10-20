@@ -1,0 +1,6 @@
+[Unit]
+Description=Vintum - elimina volumenes cloudinit huerfanos (evita migraciones abortadas)
+After=pve-cluster.service zfs.target
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/vintum-cloudinit-huerfanos.sh

@@ -1,0 +1,16 @@
+H=$(hostname)
+echo "host=$H uptime=$(awk '{print int($1)}' /proc/uptime)s"
+echo "vmbr1=$(ip -br addr show vmbr1 2>/dev/null | awk '{$1="";print}' | tr -s ' ' | cut -c1-60)"
+echo "vip250=$(ip addr show vmbr1 2>/dev/null | grep -c '10.20.0.250/32')"
+echo "veth=$(ip -br link | grep -c 'veth-p')"
+echo "nat_masq=$(iptables -t nat -S POSTROUTING | grep -c MASQUERADE) nat_dnat=$(iptables -t nat -S PREROUTING | grep -c DNAT)"
+echo "nft_vmbr1=$(nft list ruleset 2>/dev/null | grep -c vmbr1)"
+echo "ip_forward=$(sysctl -n net.ipv4.ip_forward) arc_max=$(cat /sys/module/zfs/parameters/zfs_arc_max)"
+echo "zfs_pool=$(zpool list -Ho health zfsha 2>/dev/null) zram=$(swapon --show=NAME --noheadings | grep -c zram)"
+for u in corosync corosync-qdevice pve-ha-lrm pve-ha-crm warp-svc wazuh-agent vintum-ha-net-boot vintum-ha-net.timer warp-watchdog.timer cron; do printf "unit_%s=%s " $u "$(systemctl is-active $u)"; done; echo
+echo "status_srv=$(systemctl is-active "vintum-status@$(ip -4 -o addr show vmbr0 | awk '{print $4}' | cut -d/ -f1 | head -1)")"
+echo "token=$(corosync-cmapctl -g runtime.config.totem.token 2>/dev/null | awk '{print $NF}') qdev=$(corosync-qdevice-tool -s 2>&1 | grep -c Connected)"
+echo "quorate=$(pvecm status 2>/dev/null | awk '/Quorate:/{print $2}') votos=$(pvecm status 2>/dev/null | awk '/Total votes/{print $3}')"
+echo "cron_guardado=$(crontab -l | grep -c vintum-leader)"
+echo "ha_rule=$(grep -E 'nodes' /etc/pve/ha/rules.cfg | tr -d '\t')"
+echo "ct201=$(pct list 2>/dev/null | awk '$1==201{print $2}')"

@@ -1,0 +1,47 @@
+# Filebeat 9.5.4 — pve1 (sitio1, rol: hipervisor) — Vintum Bloque 2
+# Envía a Elasticsearch (elastic-01, sitio 1) por TLS verificando la CA propia,
+# autenticado con una API key de solo escritura guardada en el keystore (${ES_API_KEY}).
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+filebeat.inputs:
+  # Accesos al panel web de Proxmox (8006): pipeline propio vintum-pveproxy-access
+  - type: filestream
+    id: pveproxy-access
+    paths: ["/var/log/pveproxy/access.log"]
+    pipeline: vintum-pveproxy-access
+    processors:
+      - add_fields: {target: event, fields: {module: proxmox}}
+
+processors:
+  # warp-svc (conector del mesh) escribe ~10k lineas/h de estadisticas: se descartan
+  # salvo avisos y errores (p. ej. hung daemon, evidencia de B2-16). Ver B2-17.
+  - drop_event:
+      when:
+        and:
+          - equals: {systemd.unit: warp-svc.service}
+          - not: {regexp: {message: "(WARN|ERROR|hung|[Dd]isconnect|[Rr]econnect|[Ff]ailed)"}}
+  - add_host_metadata: ~
+  # web1/web2 y db1/db2 son clones con el mismo hostname del SO: nombre unico para Kibana
+  - add_fields:
+      target: host
+      fields: {name: pve-01}
+  - add_fields:
+      target: labels
+      fields: {sitio: sitio1, rol: hipervisor, proyecto: vintum}
+
+output.elasticsearch:
+  hosts: ["https://10.20.0.40:9200"]
+  api_key: "${ES_API_KEY}"
+  ssl.certificate_authorities: ["/etc/filebeat/elastic-ca.crt"]
+  ssl.verification_mode: full
+
+# La plantilla, el ILM y los pipelines se cargaron una sola vez con el superusuario
+# (filebeat setup); la API key de este host no tiene permisos para modificarlos.
+setup.template.enabled: false
+setup.ilm.enabled: false
+
+logging.level: info
+logging.to_files: true
+logging.files: {path: /var/log/filebeat, name: filebeat, keepfiles: 5, permissions: "0640"}

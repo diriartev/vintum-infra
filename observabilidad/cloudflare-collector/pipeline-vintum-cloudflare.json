@@ -1,0 +1,10 @@
+{
+  "description": "Vintum: eventos y métricas de Cloudflare (API) ya en ECS; geolocaliza IPs de origen",
+  "processors": [
+    {"set": {"field": "event.ingested", "value": "{{{_ingest.timestamp}}}"}},
+    {"geoip": {"field": "source.ip", "target_field": "source.geo", "ignore_missing": true, "ignore_failure": true}},
+    {"remove": {"field": "source.geo.country_iso_code", "if": "ctx.source?.geo?.country_iso_code == ''", "ignore_failure": true}},
+    {"lowercase": {"field": "user.email", "ignore_missing": true}}
+  ],
+  "on_failure": [{"set": {"field": "error.message", "value": "{{ _ingest.on_failure_message }}"}}]
+}

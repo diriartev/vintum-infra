@@ -1,0 +1,8 @@
+[Unit]
+Description=Vintum - comprobación de arranque suave cada 30 s
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=30s
+AccuracySec=5s
+[Install]
+WantedBy=timers.target

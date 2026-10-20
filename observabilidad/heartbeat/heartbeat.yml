@@ -1,0 +1,39 @@
+# Heartbeat 9.5.4 — estado de los servicios de Vintum (Bloque 2, Eje 1: "estado de los servicios")
+# Corre en svc-01, fuera del stack Elastic: si Elasticsearch/Kibana caen, el monitor no cae con ellos.
+heartbeat.monitors:
+  # --- Servicio público, por el mismo camino que un usuario (Internet -> Cloudflare -> túnel) ---
+  - {type: http, id: web-publico, name: "Vintum (web.vintum.example)", schedule: "@every 30s",
+     urls: ["https://web.vintum.example/"], check.response.status: [200], tags: [publico, sitio1]}
+  # --- Servicios administrativos (LAN / red Docker) ---
+  - {type: http, id: wiki, name: "Wiki-JS", schedule: "@every 60s",
+     urls: ["http://10.20.0.50:3000/login"], check.response.status: [200], tags: [admin, sitio1]}
+  - {type: http, id: glpi, name: "GLPI", schedule: "@every 60s",
+     urls: ["http://glpi:80/"], check.response.status: [200, 302], tags: [admin, sitio1]}
+  - {type: http, id: homarr, name: "Homarr", schedule: "@every 60s",
+     urls: ["http://homarr:7575/"], check.response.status: [200, 307], tags: [admin, sitio1]}
+  - {type: http, id: zabbix, name: "Zabbix (frontend)", schedule: "@every 60s",
+     urls: ["http://10.20.0.30/zabbix/"], check.response.status: [200], tags: [monitoreo, sitio1]}
+  - {type: http, id: kibana, name: "Kibana", schedule: "@every 60s",
+     urls: ["http://10.20.0.40:5601/api/status"], check.response.status: [200, 401], tags: [monitoreo, sitio1]}
+  - {type: http, id: portainer, name: "Portainer", schedule: "@every 60s",
+     urls: ["https://10.20.0.50:9443/"], ssl.verification_mode: none, check.response.status: [200], tags: [admin, sitio1]}
+  # --- Hipervisores (panel web; pve-02 se alcanza por el mesh WARP) ---
+  - {type: http, id: pve-01, name: "Proxmox pve-01", schedule: "@every 60s",
+     urls: ["https://10.20.0.100:8006/"], ssl.verification_mode: none, check.response.status: [200], tags: [hipervisor, sitio1]}
+  - {type: http, id: pve-02, name: "Proxmox pve-02 (vía mesh)", schedule: "@every 60s",
+     urls: ["https://10.20.1.200:8006/"], ssl.verification_mode: none, check.response.status: [200], timeout: 20s, tags: [hipervisor, sitio2, mesh]}
+  # --- Puertos de servicio (TCP) ---
+  - {type: tcp, id: elasticsearch, name: "Elasticsearch :9200", schedule: "@every 60s", hosts: ["10.20.0.40:9200"], tags: [monitoreo, sitio1]}
+  - {type: tcp, id: mariadb-db1, name: "MariaDB db1 :3306", schedule: "@every 60s", hosts: ["10.20.0.60:3306"], tags: [datos, sitio1]}
+  - {type: tcp, id: zabbix-trapper, name: "Zabbix Server :10051", schedule: "@every 60s", hosts: ["10.20.0.30:10051"], tags: [monitoreo, sitio1]}
+
+processors:
+  - add_fields: {target: labels, fields: {proyecto: vintum, origen_sonda: svc-01}}
+
+output.elasticsearch:
+  hosts: ["https://10.20.0.40:9200"]
+  api_key: "${HB_API_KEY}"
+  ssl.certificate_authorities: ["/usr/share/heartbeat/elastic-ca.crt"]
+  ssl.verification_mode: full
+setup.template.enabled: false
+setup.ilm.enabled: false

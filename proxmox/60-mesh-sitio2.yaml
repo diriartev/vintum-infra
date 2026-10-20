@@ -1,0 +1,8 @@
+# Sitio 2 (10.20.1.0/24) se alcanza por el mesh Cloudflare WARP, cuyo conector es pve-01
+network:
+  version: 2
+  ethernets:
+    eth0:
+      routes:
+        - to: 10.20.1.0/24
+          via: 10.20.0.100

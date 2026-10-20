@@ -1,0 +1,38 @@
+# Homarr — dashboard central del proyecto (Bloque 2, Eje 2)
+# Expuesto: LAN en 10.20.0.70:7575 y públicamente como home.vintum.example
+# vía el túnel "svc-01" (cloudflared, sin puertos abiertos) + Cloudflare Access.
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:v1.77.2
+    container_name: homarr
+    restart: unless-stopped
+    env_file: .env                      # SECRET_ENCRYPTION_KEY (cifra secretos de integraciones)
+    volumes:
+      - homarr_appdata:/appdata         # SQLite con toda la config del dashboard
+    ports:
+      - "10.20.0.70:7575:7575"        # solo IP LAN; Docker se salta ufw, nunca 0.0.0.0
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 768m
+    networks: [svc_net, svc_edge]   # svc_edge: alcanzable por Heartbeat (sonda de disponibilidad)
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.1
+    container_name: svc_cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    env_file: .env                      # TUNNEL_TOKEN del túnel "svc-01"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 128m
+    depends_on: [homarr]
+    networks: [svc_net, svc_edge]   # svc_edge: alcanza GLPI y futuros servicios
+
+networks:
+  svc_net: {}
+  svc_edge:
+    external: true
+
+volumes:
+  homarr_appdata:

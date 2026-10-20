@@ -1,0 +1,82 @@
+# Filebeat 9.5.4 — Zabbix Server (LXC 101, sitio1) — Vintum Bloque 2
+# Integra Zabbix con Elasticsearch: la exportación en tiempo real de Zabbix
+# (ExportType=events) escribe cada problema/recuperación de trigger como NDJSON;
+# aquí se envía al pipeline vintum-zabbix-events, que lo mapea a ECS.
+filebeat.inputs:
+  - type: filestream
+    id: zabbix-events
+    paths: ["/var/lib/zabbix/export/problems-*.ndjson"]
+    parsers:
+      - ndjson:
+          target: zabbix
+          add_error_key: true
+    processors:
+      - add_fields: {target: event, fields: {module: zabbix, dataset: zabbix.events}}
+    pipeline: vintum-zabbix-events
+
+  # Historial de valores de ítems (ExportType=history). Zabbix exporta TODOS los ítems (~12 valores/s);
+  # aquí se conservan solo los del dashboard "Vintum - Mesh y Latencia" + CPU/memoria de cada host.
+  - type: filestream
+    id: zabbix-history
+    paths: ["/var/lib/zabbix/export/history-*.ndjson"]
+    parsers:
+      - ndjson:
+          target: zabbix
+          add_error_key: true
+    processors:
+      - drop_event:
+          when:
+            not:
+              or:
+              - equals: {zabbix.itemid: 42270}
+              - equals: {zabbix.itemid: 69823}
+              - equals: {zabbix.itemid: 70631}
+              - equals: {zabbix.itemid: 70633}
+              - equals: {zabbix.itemid: 70635}
+              - equals: {zabbix.itemid: 70637}
+              - equals: {zabbix.itemid: 70753}
+              - equals: {zabbix.itemid: 70767}
+              - equals: {zabbix.itemid: 70798}
+              - equals: {zabbix.itemid: 70812}
+              - equals: {zabbix.itemid: 70897}
+              - equals: {zabbix.itemid: 70900}
+              - equals: {zabbix.itemid: 70942}
+              - equals: {zabbix.itemid: 70945}
+              - equals: {zabbix.itemid: 71198}
+              - equals: {zabbix.itemid: 71200}
+              - equals: {zabbix.itemid: 71201}
+              - equals: {zabbix.itemid: 71202}
+              - equals: {zabbix.itemid: 71239}
+              - equals: {zabbix.itemid: 71240}
+              - equals: {zabbix.name: "CPU utilization"}
+              - equals: {zabbix.name: "Memory utilization"}
+      - add_fields: {target: event, fields: {module: zabbix, dataset: zabbix.history}}
+    pipeline: vintum-zabbix-history
+
+  - type: filestream
+    id: zabbix-server-log
+    paths: ["/var/log/zabbix/zabbix_server.log"]
+    processors:
+      - add_fields: {target: event, fields: {module: zabbix, dataset: zabbix.server_log}}
+
+processors:
+  - add_host_metadata: ~
+  - add_fields:
+      target: host
+      fields: {name: zabbix-server}
+  - add_fields:
+      target: labels
+      fields: {sitio: sitio1, rol: monitoreo, proyecto: vintum}
+
+output.elasticsearch:
+  hosts: ["https://10.20.0.40:9200"]
+  api_key: "${ES_API_KEY}"
+  ssl.certificate_authorities: ["/etc/filebeat/elastic-ca.crt"]
+  ssl.verification_mode: full
+
+setup.template.enabled: false
+setup.ilm.enabled: false
+
+logging.level: info
+logging.to_files: true
+logging.files: {path: /var/log/filebeat, name: filebeat, keepfiles: 5, permissions: "0640"}

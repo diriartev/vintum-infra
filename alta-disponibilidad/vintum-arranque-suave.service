@@ -1,0 +1,6 @@
+[Unit]
+Description=Vintum - arranque suave de elastic-01 en el nodo HDD tras un failover
+After=pve-cluster.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/vintum-arranque-suave.sh

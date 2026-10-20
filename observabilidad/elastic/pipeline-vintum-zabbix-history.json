@@ -1,0 +1,21 @@
+{
+  "description": "Vintum: historial de métricas de Zabbix (export en tiempo real, NDJSON) -> métricas normalizadas para los velocímetros/gráficas de Kibana",
+  "processors": [
+    {"date": {"field": "zabbix.clock", "formats": ["UNIX"], "target_field": "@timestamp", "ignore_failure": true}},
+    {"script": {"lang": "painless",
+      "params": {"m": {
+        "70631": ["latencia_internet", "PVE1", "ms", 1000], "70635": ["latencia_internet", "PVE2", "ms", 1000],
+        "70633": ["latencia_mesh", "PVE1 → PVE2", "ms", 1000], "70637": ["latencia_mesh", "PVE2 → PVE1", "ms", 1000],
+        "71239": ["latencia_mesh_promedio", "Promedio", "ms", 1000],
+        "71198": ["latencia_edge_cloudflare", "PVE1", "ms", 1000], "71200": ["latencia_edge_cloudflare", "PVE2", "ms", 1000],
+        "71201": ["mbps_internet", "PVE1", "Mbps", 1], "71202": ["mbps_internet", "PVE2", "Mbps", 1],
+        "71240": ["mbps_cluster_min", "Clúster", "Mbps", 1],
+        "70767": ["throughput_mesh", "PVE1 recibido", "kbps", 0.001], "70812": ["throughput_mesh", "PVE1 enviado", "kbps", 0.001],
+        "70900": ["throughput_mesh", "PVE2 recibido", "kbps", 0.001], "70945": ["throughput_mesh", "PVE2 enviado", "kbps", 0.001],
+        "70753": ["throughput_internet", "PVE1 recibido", "kbps", 0.001], "70798": ["throughput_internet", "PVE1 enviado", "kbps", 0.001],
+        "70897": ["throughput_internet", "PVE2 recibido", "kbps", 0.001], "70942": ["throughput_internet", "PVE2 enviado", "kbps", 0.001]
+      }},
+      "source": "def z = ctx.zabbix; if (z == null || z.value == null) { ctx.remove('zabbix'); return; } String id = String.valueOf(z.itemid); def e = params.m.get(id); double v = ((Number) z.value).doubleValue(); if (e != null) { z.metric = e[0]; z.serie = e[1]; z.unidad = e[2]; z.valor = v * ((Number) e[3]).doubleValue(); } else if (z.name == 'CPU utilization') { z.metric = 'cpu_util'; z.unidad = '%'; z.valor = v; } else if (z.name == 'Memory utilization') { z.metric = 'mem_util'; z.unidad = '%'; z.valor = v; } else { z.metric = 'otro'; z.valor = v; } if (z.host instanceof Map) { z.host_name = z.host.host; } if (z.serie == null) { z.serie = z.host_name; } z.itemid = id; z.remove('value'); z.remove('host'); z.remove('groups'); z.remove('item_tags'); z.remove('clock'); z.remove('ns'); z.remove('type'); ctx.event.kind = 'metric';"}}
+  ],
+  "on_failure": [{"set": {"field": "error.message", "value": "{{ _ingest.on_failure_message }}"}}]
+}

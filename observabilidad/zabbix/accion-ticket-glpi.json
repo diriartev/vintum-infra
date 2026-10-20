@@ -1,0 +1,74 @@
+[
+ {
+  "actionid": "7",
+  "name": "Vintum: ticket en GLPI (severidad >= High)",
+  "status": "0",
+  "esc_period": "1h",
+  "filter": {
+   "evaltype": "0",
+   "formula": "",
+   "eval_formula": "A",
+   "conditions": [
+    {
+     "conditiontype": "4",
+     "operator": "5",
+     "value": "4",
+     "value2": "",
+     "formulaid": "A"
+    }
+   ]
+  },
+  "operations": [
+   {
+    "operationid": "11",
+    "actionid": "7",
+    "operationtype": "0",
+    "esc_period": "0",
+    "esc_step_from": "1",
+    "esc_step_to": "1",
+    "evaltype": "0",
+    "opconditions": [],
+    "opmessage": {
+     "default_msg": "1",
+     "subject": "",
+     "message": "",
+     "mediatypeid": "102"
+    },
+    "opmessage_grp": [],
+    "opmessage_usr": [
+     {
+      "userid": "1"
+     }
+    ]
+   }
+  ],
+  "recovery_operations": [
+   {
+    "operationid": "12",
+    "actionid": "7",
+    "operationtype": "11",
+    "evaltype": "0",
+    "opconditions": [],
+    "opmessage": {
+     "default_msg": "1",
+     "subject": "",
+     "message": "",
+     "mediatypeid": "0"
+    }
+   }
+  ],
+  "update_operations": [
+   {
+    "operationid": "13",
+    "operationtype": "12",
+    "evaltype": "0",
+    "opmessage": {
+     "default_msg": "1",
+     "subject": "",
+     "message": "",
+     "mediatypeid": "0"
+    }
+   }
+  ]
+ }
+]
